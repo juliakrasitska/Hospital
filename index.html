@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Облік ліжкового фонду</title>
+    <style>
+        body {background-color: rgb(219, 244, 244);
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        .department {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .beds {
+        
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            z-index: 1;
+        }
+        .bed {
+            width: 70px;
+            height: 100px;
+            background-color: #ccc; /* колір вільного ліжка */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            position: relative;
+            cursor: pointer;
+            z-index: 0;
+        }
+        .bed.occupied {
+            background-color: orange; /* колір зайнятого ліжка */
+        }
+        .bed:hover .tooltip {
+            display: block;
+        }
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: -50px;
+            left: 0;
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            width: 120px;
+            z-index: 10;
+        }
+        .form {
+            display: flex;
+            flex-direction: column;
+            margin: 20px;
+            max-width: 300px;
+        }
+        .form input, .form select, .form button {
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Облік ліжкового фонду</h1>
+
+    <div class="department">
+        <h2>Відділення 1</h2>
+        <div class="beds" id="department1"></div>
+    </div>
+    <div class="department">
+        <h2>Відділення 2</h2>
+        <div class="beds" id="department2"></div>
+    </div>
+    <div class="department">
+        <h2>Відділення 3</h2>
+        <div class="beds" id="department3"></div>
+    </div>
+    <div class="department">
+        <h2>Відділення 4</h2>
+        <div class="beds" id="department4"></div>
+    </div>
+
+    <div class="form">
+        <h3>Госпіталізація пацієнта</h3>
+        <input type="text" id="patientName" placeholder="Ім'я та прізвище">
+        <input type="text" id="diagnosis" placeholder="Діагноз">
+        <select id="departmentSelect">
+            <option value="1">Відділення 1</option>
+            <option value="2">Відділення 2</option>
+            <option value="3">Відділення 3</option>
+            <option value="4">Відділення 4</option>
+        </select>
+        <button onclick="admitPatient()">Госпіталізувати</button>
+    </div>
+
+    <div class="form">
+        <h3>Виписка пацієнта</h3>
+        <input type="text" id="patientNameDischarge" placeholder="Ім'я та прізвище">
+        <button onclick="dischargePatient()">Виписати</button>
+    </div>
+
+    <script>
+        // Дані про ліжка і пацієнтів
+        const departments = {
+            1: { beds: Array(10).fill(null) },
+            2: { beds: Array(10).fill(null) },
+            3: { beds: Array(10).fill(null) },
+            4: { beds: Array(10).fill(null) }
+        };
+
+        // Створення ліжок у кожному відділенні
+        function renderBeds() {
+            for (let deptId in departments) {
+                const departmentDiv = document.getElementById(`department${deptId}`);
+                departmentDiv.innerHTML = ''; // очищення
+                departments[deptId].beds.forEach((patient, bedIndex) => {
+                    const bedDiv = document.createElement('div');
+                    bedDiv.className = 'bed' + (patient ? ' occupied' : '');
+                    bedDiv.innerText = bedIndex + 1;
+                    if (patient) {
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'tooltip';
+                        tooltip.innerText = `Пацієнт: ${patient.name}\nГоспіталізовано: ${patient.admitDate}\nДіагноз: ${patient.diagnosis}`;
+                        bedDiv.appendChild(tooltip);
+                    }
+                    departmentDiv.appendChild(bedDiv);
+                });
+            }
+        }
+
+        // Госпіталізація
+        function admitPatient() {
+            const name = document.getElementById('patientName').value;
+            const diagnosis = document.getElementById('diagnosis').value;
+            const department = document.getElementById('departmentSelect').value;
+
+            if (!name || !diagnosis) return alert('Введіть усі дані.');
+
+            const bedIndex = departments[department].beds.findIndex(bed => bed === null);
+            if (bedIndex === -1) return alert('Немає вільних ліжок у цьому відділенні.');
+
+            departments[department].beds[bedIndex] = {
+                name: name,
+                diagnosis: diagnosis,
+                admitDate: new Date().toLocaleString()
+            };
+            renderBeds();
+        }
+
+        // Виписка
+        function dischargePatient() {
+            const name = document.getElementById('patientNameDischarge').value;
+            if (!name) return alert('Введіть ім\'я пацієнта для виписки.');
+
+            for (let deptId in departments) {
+                const bedIndex = departments[deptId].beds.findIndex(bed => bed && bed.name === name);
+                if (bedIndex !== -1) {
+                    departments[deptId].beds[bedIndex] = null;
+                    renderBeds();
+                    return alert(`Пацієнта ${name} виписано.`);
+                }
+            }
+            alert('Пацієнта не знайдено.');
+        }
+
+        // Початкова візуалізація ліжок
+        renderBeds();
+    </script>
+</body>
+</html>
